@@ -28,9 +28,7 @@ typedef struct __PHONE_BOOK_ENTRY {
     pdetail dtl;
 } entry;
 
-entry *findName(char lastname[], entry *pHead);
-
-typedef struct _append_a {
+typedef struct __ARGS {
     char *ptr;
     char *eptr;
     int tid;
@@ -40,12 +38,9 @@ typedef struct _append_a {
     entry *pLast;
 } append_a;
 
-append_a *new_append_a(char *ptr, char *eptr, int tid, int ntd, entry *start);
-
+entry *findName(char lastname[], entry *pHead);
+append_a *new_append_a(char *ptr, char *eptr, int ntd,entry *start);
 void append(void *arg);
 
 void show_entry(entry *pHead);
-
-static double diff_in_second(struct timespec t1, struct timespec t2);
-
 #endif

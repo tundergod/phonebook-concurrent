@@ -5,6 +5,7 @@
 
 #include "phonebook_opt.h"
 #include "debug.h"
+#include "tpool.h"
 
 entry *findName(char lastname[], entry *pHead)
 {
@@ -26,14 +27,13 @@ entry *findName(char lastname[], entry *pHead)
     return NULL;
 }
 
-append_a *new_append_a(char *ptr, char *eptr, int tid, int ntd,
+append_a *new_append_a(char *ptr, char *eptr, int ntd,
                        entry *start)
 {
     append_a *app = (append_a *) malloc(sizeof(append_a));
 
     app->ptr = ptr;
     app->eptr = eptr;
-    app->tid = tid;
     app->nthread = ntd;
     app->entryStart = start;
 
@@ -41,53 +41,25 @@ append_a *new_append_a(char *ptr, char *eptr, int tid, int ntd,
     return app;
 }
 
+
 void append(void *arg)
 {
-    struct timespec start, end;
-    double cpu_time;
-
-    clock_gettime(CLOCK_REALTIME, &start);
-
-    append_a *app = (append_a *) arg;
-
     int count = 0;
+    append_a *app = (append_a *) arg;
     entry *j = app->entryStart;
-    for (char *i = app->ptr; i < app->eptr;
-            i += MAX_LAST_NAME_SIZE * app->nthread,
-            j += app->nthread,count++) {
+    for (char *i = app->ptr; i < app->eptr; i += MAX_LAST_NAME_SIZE * app->nthread,j += app->nthread,count++) {
         app->pLast->pNext = j;
         app->pLast = app->pLast->pNext;
 
         app->pLast->lastName = i;
-        dprintf("thread %d append string = %s\n",
-                app->tid, app->pLast->lastName);
         app->pLast->pNext = NULL;
     }
-    clock_gettime(CLOCK_REALTIME, &end);
-    cpu_time = diff_in_second(start, end);
-
-    dprintf("thread take %lf sec, count %d\n", cpu_time, count);
-
-    pthread_exit(NULL);
 }
 
 void show_entry(entry *pHead)
 {
-    while (pHead != NULL) {
-        printf("lastName = %s\n", pHead->lastName);
+    while (pHead) {
+        printf("%s\n", pHead->lastName);
         pHead = pHead->pNext;
     }
-}
-
-static double diff_in_second(struct timespec t1, struct timespec t2)
-{
-    struct timespec diff;
-    if (t2.tv_nsec-t1.tv_nsec < 0) {
-        diff.tv_sec  = t2.tv_sec - t1.tv_sec - 1;
-        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec + 1000000000;
-    } else {
-        diff.tv_sec  = t2.tv_sec - t1.tv_sec;
-        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec;
-    }
-    return (diff.tv_sec + diff.tv_nsec / 1000000000.0);
 }
